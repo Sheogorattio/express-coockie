@@ -2,13 +2,14 @@ import {users} from '../data/user.js'
 import bcrypt from "bcrypt"
 import validator from 'validator';
 import jwt from "jsonwebtoken";
+import path from "node:path"
 
 export const checkUser = (req, res, next)=> {
     // if(req.cookies && req.cookies.user){
     //     res.locals.user = req.cookies.user;
     // }
     if(req.session && req.session.user){
-        res.locals.user = req.session.user.login;
+        res.locals.user = {login: req.session.user.login, image:req.session.user.image};
     }
     next ();
 }
@@ -48,10 +49,12 @@ export const createUser = (req, res, next)=>{
                 id: users.length+1,
                 login: login,
                 email: email,
-                password: hash
+                password: hash,
+                image : req.file.filename
 
             });
-            //console.log(users);
+            console.log(users);
+            console.log("CREATE USER with file:", req.file); 
             next();
             return;
         }

@@ -2,6 +2,19 @@ import {Router} from 'express'
 import {checkToken, createUser, loginUser} from "../middlewaares/user-middleware.js"
 import {users, refreshTokens} from "../data/user.js"
 import jwt from "jsonwebtoken"
+import path from "node:path"
+import multer from 'multer'
+
+const storage = multer.diskStorage({
+    destination: "photos/",
+    filename: (req, file, cb) => {
+        cb(null,req.body.login + path.extname(file.originalname) );
+    }
+})
+
+const configMulter = multer({
+    storage: storage
+});
 
 const userRoutes = Router();
 
@@ -13,11 +26,14 @@ userRoutes.route('/')
 userRoutes.route("/signin")
 .get((req,res)=> {res.render("form_auth")})
 .post(loginUser, (req, res) => {
-    console.log(req.body.login);
+    
     req.session.user = {
         login: req.body.login,
-        password: req.body.password
+        password: req.body.password,
+        image: users.find(u => u.login === req.body.login)[0].image
     };
+
+
     const user = req.session.user;
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
@@ -32,7 +48,6 @@ userRoutes.route("/signin")
 });
 
 userRoutes.route("/refresh")
-//.get((req,res)=> {res.json("get refrash")})
 .post((req, res) => {
     const userLogin = req.body.login;
     const serverStoredToken = refreshTokens.find(rt => rt.login === userLogin);
@@ -55,8 +70,6 @@ userRoutes.route("/refresh")
 });
 
 userRoutes.get("/logout", (req, res) => {
-    //console.log("USER");
-    //console.log(req.session.user);
     
     if (req.session) req.session.destroy();
     
@@ -65,13 +78,15 @@ userRoutes.get("/logout", (req, res) => {
 
 userRoutes.route("/signup")
 .get((req,res)=> {res.render("form_register")})
-.post(createUser, (req,res) => {
+.post(configMulter.single("file"), createUser,   (req,res) => {
+    console.log(req.file);
     req.session.user = {
         login: req.body.login,
         email : req.body.email,
-        password: req.body.password
+        password: req.body.password,
+        image: users.find(u => u.login === req.body.login).image
     };
-    //console.log(req.session.user);
+    //console.log(users.find(u => u.login === req.body.login).image)
     users.push(req.session.user);
     res.cookie("jwt", generateAccessToken(req.session.user), {
         httpOnly: true,

@@ -17,6 +17,7 @@ const hbs = exphbs.create(
     }
 )
 const app = express();
+app.use(express.static("photos"));
 app.use(express.static("public"));
 app.engine("hbs", hbs.engine);
 app.set("view engine", "hbs");

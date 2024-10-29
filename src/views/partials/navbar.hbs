@@ -31,6 +31,10 @@
         {{/if}}
       
     </div>
-    {{#if user}}<div>Hello {{user}}! <a href="/user/logout">Logout</a></div>{{/if}}
+    {{#if user}}
+      <div>Hello {{user.login}}!
+      <img src="/{{user.image}}" alt="User Avatar" class="rounded-circle" width="40" height="40" />
+      <a href="/user/logout">Logout</a></div>
+    {{/if}}
   </div>
 </nav>
