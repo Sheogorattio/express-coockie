@@ -1,6 +1,7 @@
 import {users} from '../data/user.js'
 import bcrypt from "bcrypt"
 import validator from 'validator';
+import jwt from "jsonwebtoken";
 
 export const checkUser = (req, res, next)=> {
     // if(req.cookies && req.cookies.user){
@@ -17,6 +18,7 @@ export const loginUser = (req,res, next) => {
     
     const user = users.find(u => u.login === login);
     if (!user) {
+        console.log(users)
         return res.status(400).send('User does not exist');
     }
     
@@ -49,10 +51,28 @@ export const createUser = (req, res, next)=>{
                 password: hash
 
             });
+            //console.log(users);
             next();
             return;
         }
         res.status(400).redirect('/');
+    }
+}
+
+export const checkToken = (req,res,next)=> {
+    const userToken = req.cookies.jwt;
+    if (!userToken) {
+        return res.status(401).json({ message: "Access denied" });
+    }
+
+    try {
+        const decodedInfo = jwt.verify(userToken, process.env.ACCESS_TOKEN_SECRET);
+       
+        next();
+    } catch (err) { 
+        console.log("jwt.verify error\n" +err.message);
+        const redirectUrl = req.originalUrl;
+        res.redirect(`/user/refresh`);
     }
 }
 
